@@ -167,8 +167,8 @@ VALUES
 
 ## 👥 Contributing
 
-Lujie Qian
-Yanjun Ma
+Lujie Qian, 
+Yanjun Ma, 
 Yimi Ding
 
 ## 📜 License
