@@ -1,0 +1,717 @@
+--sqlplus / as sysdba
+
+-- Create STORAGE
+CREATE TABLESPACE assignment3_ts
+    DATAFILE 'assignment3_ts.dat' SIZE 100M
+    ONLINE;
+
+-- Create Users
+CREATE USER assignment3_user IDENTIFIED BY password
+    DEFAULT TABLESPACE assignment3_ts
+    QUOTA UNLIMITED ON assignment3_ts;
+
+-- Grant PRIVILEGES
+GRANT CONNECT, RESOURCE TO assignment3_user;
+GRANT CREATE VIEW TO assignment3_user;  
+GRANT CREATE TRIGGER TO assignment3_user;  
+
+-- NOW connect as the applicationAdmin
+CONNECT assignment3_user/password;
+
+--Create tables
+CREATE TABLE Renters (
+    Renter_ID INT PRIMARY KEY,
+    First_Name VARCHAR(50),
+    Last_Name VARCHAR(50),
+    Email VARCHAR(100),
+    Street_Number INT,
+    Street VARCHAR(100),
+    City VARCHAR(100),
+    Province VARCHAR(50),
+    Apt VARCHAR(50),
+    Postal_Code VARCHAR(10),
+    Join_Date DATE
+);
+
+CREATE TABLE Phone (
+    Phone_ID INT PRIMARY KEY,
+    Phone_Number VARCHAR(15)
+);
+
+CREATE TABLE RenterPhone (
+    RenterPhone_ID INT PRIMARY KEY,
+    Renter_ID INT,
+    Phone_ID INT,
+    Begin_Date DATE,
+    End_Date DATE,
+    FOREIGN KEY (Renter_ID) REFERENCES Renters(Renter_ID),
+    FOREIGN KEY (Phone_ID) REFERENCES Phone(Phone_ID)
+);
+
+CREATE TABLE Staff (
+    Staff_ID INT PRIMARY KEY,
+    First_Name VARCHAR(50),
+    Last_Name VARCHAR(50),
+    Email VARCHAR(100),
+    Phone VARCHAR(15),
+    Role VARCHAR(50),
+    Hire_Date DATE,
+    Salary DECIMAL(10, 2)
+);
+
+CREATE TABLE RentalTransactions (
+    Transaction_ID INT PRIMARY KEY,
+    Renter_ID INT,
+    Transaction_Date DATE,
+    Total_Fee DECIMAL(10, 2),
+    Staff_ID INT,
+    FOREIGN KEY (Renter_ID) REFERENCES Renters(Renter_ID),
+    FOREIGN KEY (Staff_ID) REFERENCES Staff(Staff_ID)
+);
+
+CREATE TABLE ToolTypes (
+    Type_ID INT PRIMARY KEY,
+    Type_Name VARCHAR(100)
+);
+
+CREATE TABLE ToolSubTypes (
+    SubType_ID INT PRIMARY KEY,
+    SubType_Name VARCHAR(100),
+    Type_ID INT,
+    FOREIGN KEY (Type_ID) REFERENCES ToolTypes(Type_ID)
+);
+
+
+CREATE TABLE Tools (
+    Tool_ID INT PRIMARY KEY,
+    Name VARCHAR(100),
+    Type_ID INT,
+    SubType_ID INT,
+    Condition VARCHAR(50),
+    Brand VARCHAR(50),
+    Model VARCHAR(50),
+    Daily_Rental_Price DECIMAL(10, 2),
+    Deposit DECIMAL(10, 2),
+    FOREIGN KEY (Type_ID) REFERENCES ToolTypes(Type_ID),
+    FOREIGN KEY (SubType_ID) REFERENCES ToolSubTypes(SubType_ID)
+);
+
+CREATE TABLE ToolStatus (
+    Status_ID INT PRIMARY KEY,
+    Status VARCHAR(50)
+);
+
+CREATE TABLE ToolStatusHistory (
+    ToolStatus_ID INT PRIMARY KEY,
+    Tool_ID INT,
+    Status_ID INT,
+    Begin_Date DATE,
+    End_Date DATE,
+    FOREIGN KEY (Tool_ID) REFERENCES Tools(Tool_ID),
+    FOREIGN KEY (Status_ID) REFERENCES ToolStatus(Status_ID)
+);
+
+CREATE TABLE RentalItem (
+    Transaction_ID INT,
+    Tool_ID INT,
+    Quantity INT,
+    Start_Date DATE,
+    End_Date DATE,
+    PRIMARY KEY (Transaction_ID, Tool_ID),
+    FOREIGN KEY (Transaction_ID) REFERENCES RentalTransactions(Transaction_ID),
+    FOREIGN KEY (Tool_ID) REFERENCES Tools(Tool_ID)
+);
+
+CREATE TABLE ServiceDetails (
+    Service_ID INT PRIMARY KEY,
+    Service_Name VARCHAR(100)
+);
+
+
+
+CREATE TABLE MaintenanceRecords (
+    Maintenance_ID INT PRIMARY KEY,
+    Tool_ID INT,
+    Staff_ID INT,
+    Maintenance_Date DATE,
+    FOREIGN KEY (Tool_ID) REFERENCES Tools(Tool_ID),
+    FOREIGN KEY (Staff_ID) REFERENCES Staff(Staff_ID)
+);
+
+
+CREATE TABLE MaintenanceService (
+    Maintenance_Service_ID INT PRIMARY KEY,
+    Maintenance_ID INT,
+    Service_ID INT,
+    Begin_Date DATE,
+    End_Date DATE,
+    FOREIGN KEY (Maintenance_ID) REFERENCES MaintenanceRecords(Maintenance_ID),
+    FOREIGN KEY (Service_ID) REFERENCES ServiceDetails(Service_ID)
+);
+
+
+--insert renters table
+INSERT ALL
+  INTO Renters (Renter_ID, First_Name, Last_Name, Email, Street_Number, Street, City, Province, Apt, Postal_Code, Join_Date) VALUES (1, 'John', 'Doe', 'john.doe@example.com', '123', 'Main St', 'Toronto', 'ON', '101', 'M5V 1A1', TO_DATE('2024-01-01', 'YYYY-MM-DD'))
+  INTO Renters (Renter_ID, First_Name, Last_Name, Email, Street_Number, Street, City, Province, Apt, Postal_Code, Join_Date) VALUES (2, 'Jane', 'Smith', 'jane.smith@example.com', '124', 'Main St', 'Toronto', 'ON', '102', 'M5V 1A2', TO_DATE('2024-02-01', 'YYYY-MM-DD'))
+  INTO Renters (Renter_ID, First_Name, Last_Name, Email, Street_Number, Street, City, Province, Apt, Postal_Code, Join_Date) VALUES (3, 'James', 'Brown', 'james.brown@example.com', '125', 'Main St', 'Vancouver', 'BC', '103', 'V6B 1B2', TO_DATE('2024-03-01', 'YYYY-MM-DD'))
+  INTO Renters (Renter_ID, First_Name, Last_Name, Email, Street_Number, Street, City, Province, Apt, Postal_Code, Join_Date) VALUES (4, 'Lisa', 'Taylor', 'lisa.taylor@example.com', '126', 'Main St', 'Ottawa', 'ON', '104', 'K1A 0B1', TO_DATE('2024-04-01', 'YYYY-MM-DD'))
+  INTO Renters (Renter_ID, First_Name, Last_Name, Email, Street_Number, Street, City, Province, Apt, Postal_Code, Join_Date) VALUES (5, 'Robert', 'Williams', 'robert.williams@example.com', '127', 'King St', 'Montreal', 'QC', '105', 'H2X 1Y1', TO_DATE('2024-05-01', 'YYYY-MM-DD'))
+  INTO Renters (Renter_ID, First_Name, Last_Name, Email, Street_Number, Street, City, Province, Apt, Postal_Code, Join_Date) VALUES (6, 'Michael', 'Jones', 'michael.jones@example.com', '128', 'Queen St', 'Calgary', 'AB', '106', 'T2P 1M1', TO_DATE('2024-06-01', 'YYYY-MM-DD'))
+  INTO Renters (Renter_ID, First_Name, Last_Name, Email, Street_Number, Street, City, Province, Apt, Postal_Code, Join_Date) VALUES (7, 'Mary', 'Davis', 'mary.davis@example.com', '129', 'Yonge St', 'Edmonton', 'AB', '107', 'T5J 2T2', TO_DATE('2024-07-01', 'YYYY-MM-DD'))
+  INTO Renters (Renter_ID, First_Name, Last_Name, Email, Street_Number, Street, City, Province, Apt, Postal_Code, Join_Date) VALUES (8, 'David', 'Miller', 'david.miller@example.com', '130', 'Bay St', 'Toronto', 'ON', '108', 'M5S 3B3', TO_DATE('2024-08-01', 'YYYY-MM-DD'))
+  INTO Renters (Renter_ID, First_Name, Last_Name, Email, Street_Number, Street, City, Province, Apt, Postal_Code, Join_Date) VALUES (9, 'Nancy', 'Wilson', 'nancy.wilson@example.com', '131', 'Spadina Ave', 'Ottawa', 'ON', '109', 'K2P 1X1', TO_DATE('2024-09-01', 'YYYY-MM-DD'))
+  INTO Renters (Renter_ID, First_Name, Last_Name, Email, Street_Number, Street, City, Province, Apt, Postal_Code, Join_Date) VALUES (10, 'William', 'Moore', 'william.moore@example.com', '132', 'Bloor St', 'Montreal', 'QC', '110', 'H3B 2Z2', TO_DATE('2024-10-01', 'YYYY-MM-DD'))
+SELECT * FROM dual;
+
+
+--insert staff table
+INSERT ALL
+  INTO Staff (Staff_ID, First_Name, Last_Name, Email, Phone, Role, Hire_Date, Salary) VALUES (1, 'John', 'Smith', 'john.smith@example.com', '123-456-7890', 'Manager', TO_DATE('2023-01-01', 'YYYY-MM-DD'), 55000.00)
+  INTO Staff (Staff_ID, First_Name, Last_Name, Email, Phone, Role, Hire_Date, Salary) VALUES (2, 'Jane', 'Doe', 'jane.doe@example.com', '123-456-7891', 'Technician', TO_DATE('2023-02-01', 'YYYY-MM-DD'), 45000.00)
+  INTO Staff (Staff_ID, First_Name, Last_Name, Email, Phone, Role, Hire_Date, Salary) VALUES (3, 'James', 'Brown', 'james.brown@example.com', '123-456-7892', 'Technician', TO_DATE('2023-03-01', 'YYYY-MM-DD'), 48000.00)
+  INTO Staff (Staff_ID, First_Name, Last_Name, Email, Phone, Role, Hire_Date, Salary) VALUES (4, 'Mary', 'Johnson', 'mary.johnson@example.com', '123-456-7893', 'Technician', TO_DATE('2023-04-01', 'YYYY-MM-DD'), 47000.00)
+  INTO Staff (Staff_ID, First_Name, Last_Name, Email, Phone, Role, Hire_Date, Salary) VALUES (5, 'Robert', 'Williams', 'robert.williams@example.com', '123-456-7894', 'Technician', TO_DATE('2023-05-01', 'YYYY-MM-DD'), 46000.00)
+  INTO Staff (Staff_ID, First_Name, Last_Name, Email, Phone, Role, Hire_Date, Salary) VALUES (6, 'David', 'Miller', 'david.miller@example.com', '123-456-7895', 'Technician', TO_DATE('2023-06-01', 'YYYY-MM-DD'), 48000.00)
+  INTO Staff (Staff_ID, First_Name, Last_Name, Email, Phone, Role, Hire_Date, Salary) VALUES (7, 'Lisa', 'Taylor', 'lisa.taylor@example.com', '123-456-7896', 'Technician', TO_DATE('2023-07-01', 'YYYY-MM-DD'), 49000.00)
+  INTO Staff (Staff_ID, First_Name, Last_Name, Email, Phone, Role, Hire_Date, Salary) VALUES (8, 'William', 'Moore', 'william.moore@example.com', '123-456-7897', 'Technician', TO_DATE('2023-08-01', 'YYYY-MM-DD'), 50000.00)
+  INTO Staff (Staff_ID, First_Name, Last_Name, Email, Phone, Role, Hire_Date, Salary) VALUES (9, 'Michael', 'Wilson', 'michael.wilson@example.com', '123-456-7898', 'Technician', TO_DATE('2023-09-01', 'YYYY-MM-DD'), 51000.00)
+  INTO Staff (Staff_ID, First_Name, Last_Name, Email, Phone, Role, Hire_Date, Salary) VALUES (10, 'Nancy', 'Davis', 'nancy.davis@example.com', '123-456-7899', 'Technician', TO_DATE('2023-10-01', 'YYYY-MM-DD'), 52000.00)
+SELECT * FROM dual;
+
+
+--insert tooltype
+INSERT ALL
+  INTO ToolTypes (Type_ID, Type_Name) VALUES (1, 'Power Tools')
+  INTO ToolTypes (Type_ID, Type_Name) VALUES (2, 'Hand Tools')
+  INTO ToolTypes (Type_ID, Type_Name) VALUES (3, 'Measuring Tools')
+SELECT * FROM dual;
+
+
+--insert ToolSubTypes
+INSERT ALL
+  INTO ToolSubTypes (SubType_ID, SubType_Name, Type_ID) VALUES (1, 'Drill', 1)
+  INTO ToolSubTypes (SubType_ID, SubType_Name, Type_ID) VALUES (2, 'Hammer', 1)
+  INTO ToolSubTypes (SubType_ID, SubType_Name, Type_ID) VALUES (3, 'Saws', 2)
+SELECT * FROM dual;
+
+
+--insert tools
+INSERT ALL
+  INTO Tools (Tool_ID, Name, Type_ID, SubType_ID, Condition, Brand, Model, Daily_Rental_Price, Deposit) VALUES (1, 'Drill', 1, 1, 'Good', 'BrandA', 'ModelA', 50.00, 200.00)
+  INTO Tools (Tool_ID, Name, Type_ID, SubType_ID, Condition, Brand, Model, Daily_Rental_Price, Deposit) VALUES (2, 'Hammer', 1, 2, 'Excellent', 'BrandB', 'ModelB', 30.00, 150.00)
+  INTO Tools (Tool_ID, Name, Type_ID, SubType_ID, Condition, Brand, Model, Daily_Rental_Price, Deposit) VALUES (3, 'Saw', 2, 3, 'Fair', 'BrandC', 'ModelC', 40.00, 180.00)
+  INTO Tools (Tool_ID, Name, Type_ID, SubType_ID, Condition, Brand, Model, Daily_Rental_Price, Deposit) VALUES (4, 'Wrench', 1, 1, 'Good', 'BrandD', 'ModelD', 20.00, 100.00)
+  INTO Tools (Tool_ID, Name, Type_ID, SubType_ID, Condition, Brand, Model, Daily_Rental_Price, Deposit) VALUES (5, 'Screwdriver', 3, 2, 'Poor', 'BrandE', 'ModelE', 15.00, 50.00)
+  INTO Tools (Tool_ID, Name, Type_ID, SubType_ID, Condition, Brand, Model, Daily_Rental_Price, Deposit) VALUES (6, 'Level', 2, 3, 'Excellent', 'BrandF', 'ModelF', 25.00, 75.00)
+  INTO Tools (Tool_ID, Name, Type_ID, SubType_ID, Condition, Brand, Model, Daily_Rental_Price, Deposit) VALUES (7, 'Tape Measure', 3, 1, 'Good', 'BrandG', 'ModelG', 10.00, 30.00)
+  INTO Tools (Tool_ID, Name, Type_ID, SubType_ID, Condition, Brand, Model, Daily_Rental_Price, Deposit) VALUES (8, 'Drill Press', 1, 2, 'Fair', 'BrandH', 'ModelH', 60.00, 250.00)
+  INTO Tools (Tool_ID, Name, Type_ID, SubType_ID, Condition, Brand, Model, Daily_Rental_Price, Deposit) VALUES (9, 'Angle Grinder', 2, 3, 'Excellent', 'BrandI', 'ModelI', 35.00, 120.00)
+  INTO Tools (Tool_ID, Name, Type_ID, SubType_ID, Condition, Brand, Model, Daily_Rental_Price, Deposit) VALUES (10, 'Circular Saw', 1, 1, 'Poor', 'BrandJ', 'ModelJ', 45.00, 150.00)
+SELECT * FROM dual;
+
+
+--insert RentalTransactions
+INSERT ALL
+  INTO RentalTransactions (Transaction_ID, Renter_ID, Transaction_Date, Total_Fee, Staff_ID) VALUES (1, 1, TO_DATE('2024-01-01', 'YYYY-MM-DD'), 100.00, 1)
+  INTO RentalTransactions (Transaction_ID, Renter_ID, Transaction_Date, Total_Fee, Staff_ID) VALUES (2, 2, TO_DATE('2024-02-01', 'YYYY-MM-DD'), 150.00, 2)
+  INTO RentalTransactions (Transaction_ID, Renter_ID, Transaction_Date, Total_Fee, Staff_ID) VALUES (3, 3, TO_DATE('2024-03-01', 'YYYY-MM-DD'), 120.00, 3)
+  INTO RentalTransactions (Transaction_ID, Renter_ID, Transaction_Date, Total_Fee, Staff_ID) VALUES (4, 4, TO_DATE('2024-04-01', 'YYYY-MM-DD'), 180.00, 4)
+  INTO RentalTransactions (Transaction_ID, Renter_ID, Transaction_Date, Total_Fee, Staff_ID) VALUES (5, 5, TO_DATE('2024-05-01', 'YYYY-MM-DD'), 200.00, 5)
+  INTO RentalTransactions (Transaction_ID, Renter_ID, Transaction_Date, Total_Fee, Staff_ID) VALUES (6, 6, TO_DATE('2024-06-01', 'YYYY-MM-DD'), 220.00, 6)
+  INTO RentalTransactions (Transaction_ID, Renter_ID, Transaction_Date, Total_Fee, Staff_ID) VALUES (7, 7, TO_DATE('2024-07-01', 'YYYY-MM-DD'), 160.00, 7)
+  INTO RentalTransactions (Transaction_ID, Renter_ID, Transaction_Date, Total_Fee, Staff_ID) VALUES (8, 8, TO_DATE('2024-08-01', 'YYYY-MM-DD'), 130.00, 8)
+  INTO RentalTransactions (Transaction_ID, Renter_ID, Transaction_Date, Total_Fee, Staff_ID) VALUES (9, 9, TO_DATE('2024-09-01', 'YYYY-MM-DD'), 140.00, 9)
+  INTO RentalTransactions (Transaction_ID, Renter_ID, Transaction_Date, Total_Fee, Staff_ID) VALUES (10, 10, TO_DATE('2024-10-01', 'YYYY-MM-DD'), 110.00, 10)
+SELECT * FROM dual;
+
+
+--insert RentalItem
+INSERT ALL
+  INTO RentalItem (Transaction_ID, Tool_ID, Quantity, Start_Date, End_Date) VALUES (1, 1, 2, TO_DATE('2024-01-01', 'YYYY-MM-DD'), TO_DATE('2024-01-05', 'YYYY-MM-DD'))
+  INTO RentalItem (Transaction_ID, Tool_ID, Quantity, Start_Date, End_Date) VALUES (2, 2, 1, TO_DATE('2024-02-01', 'YYYY-MM-DD'), TO_DATE('2024-02-05', 'YYYY-MM-DD'))
+  INTO RentalItem (Transaction_ID, Tool_ID, Quantity, Start_Date, End_Date) VALUES (3, 3, 3, TO_DATE('2024-03-01', 'YYYY-MM-DD'), TO_DATE('2024-03-07', 'YYYY-MM-DD'))
+  INTO RentalItem (Transaction_ID, Tool_ID, Quantity, Start_Date, End_Date) VALUES (4, 4, 2, TO_DATE('2024-04-01', 'YYYY-MM-DD'), TO_DATE('2024-04-06', 'YYYY-MM-DD'))
+  INTO RentalItem (Transaction_ID, Tool_ID, Quantity, Start_Date, End_Date) VALUES (5, 5, 1, TO_DATE('2024-05-01', 'YYYY-MM-DD'), TO_DATE('2024-05-03', 'YYYY-MM-DD'))
+  INTO RentalItem (Transaction_ID, Tool_ID, Quantity, Start_Date, End_Date) VALUES (6, 6, 2, TO_DATE('2024-06-01', 'YYYY-MM-DD'), TO_DATE('2024-06-05', 'YYYY-MM-DD'))
+  INTO RentalItem (Transaction_ID, Tool_ID, Quantity, Start_Date, End_Date) VALUES (7, 7, 3, TO_DATE('2024-07-01', 'YYYY-MM-DD'), TO_DATE('2024-07-10', 'YYYY-MM-DD'))
+  INTO RentalItem (Transaction_ID, Tool_ID, Quantity, Start_Date, End_Date) VALUES (8, 8, 1, TO_DATE('2024-08-01', 'YYYY-MM-DD'), TO_DATE('2024-08-05', 'YYYY-MM-DD'))
+  INTO RentalItem (Transaction_ID, Tool_ID, Quantity, Start_Date, End_Date) VALUES (9, 9, 2, TO_DATE('2024-09-01', 'YYYY-MM-DD'), TO_DATE('2024-09-06', 'YYYY-MM-DD'))
+  INTO RentalItem (Transaction_ID, Tool_ID, Quantity, Start_Date, End_Date) VALUES (10, 10, 1, TO_DATE('2024-10-01', 'YYYY-MM-DD'), TO_DATE('2024-10-05', 'YYYY-MM-DD'))
+SELECT * FROM dual;
+
+
+--insert MaintenanceRecords
+INSERT INTO MaintenanceRecords (Maintenance_ID, Tool_ID, Staff_ID, Maintenance_Date) VALUES (1, 1, 1, TO_DATE('2024-01-05', 'YYYY-MM-DD'));
+INSERT INTO MaintenanceRecords (Maintenance_ID, Tool_ID, Staff_ID, Maintenance_Date) VALUES (2, 2, 2, TO_DATE('2024-02-05', 'YYYY-MM-DD'));
+INSERT INTO MaintenanceRecords (Maintenance_ID, Tool_ID, Staff_ID, Maintenance_Date) VALUES (3, 3, 3, TO_DATE('2024-03-07', 'YYYY-MM-DD'));
+INSERT INTO MaintenanceRecords (Maintenance_ID, Tool_ID, Staff_ID, Maintenance_Date) VALUES (4, 4, 4, TO_DATE('2024-04-06', 'YYYY-MM-DD'));
+INSERT INTO MaintenanceRecords (Maintenance_ID, Tool_ID, Staff_ID, Maintenance_Date) VALUES (5, 5, 5, TO_DATE('2024-05-03', 'YYYY-MM-DD'));
+INSERT INTO MaintenanceRecords (Maintenance_ID, Tool_ID, Staff_ID, Maintenance_Date) VALUES (6, 6, 6, TO_DATE('2024-06-05', 'YYYY-MM-DD'));
+INSERT INTO MaintenanceRecords (Maintenance_ID, Tool_ID, Staff_ID, Maintenance_Date) VALUES (7, 7, 7, TO_DATE('2024-07-10', 'YYYY-MM-DD'));
+INSERT INTO MaintenanceRecords (Maintenance_ID, Tool_ID, Staff_ID, Maintenance_Date) VALUES (8, 8, 8, TO_DATE('2024-08-05', 'YYYY-MM-DD'));
+INSERT INTO MaintenanceRecords (Maintenance_ID, Tool_ID, Staff_ID, Maintenance_Date) VALUES (9, 9, 9, TO_DATE('2024-09-06', 'YYYY-MM-DD'));
+INSERT INTO MaintenanceRecords (Maintenance_ID, Tool_ID, Staff_ID, Maintenance_Date) VALUES (10, 10, 10, TO_DATE('2024-10-05', 'YYYY-MM-DD'));
+
+
+--insert ToolStatus
+INSERT INTO ToolStatus (Status_ID, Status) VALUES (1, 'Available');
+INSERT INTO ToolStatus (Status_ID, Status) VALUES (2, 'In Maintenance');
+INSERT INTO ToolStatus (Status_ID, Status) VALUES (3, 'Out of Order');
+INSERT INTO ToolStatus (Status_ID, Status) VALUES (4, 'Rented');
+INSERT INTO ToolStatus (Status_ID, Status) VALUES (5, 'Reserved');
+
+
+--insert ServiceDetails
+INSERT INTO ServiceDetails (Service_ID, Service_Name) VALUES (1, 'Repair');
+INSERT INTO ServiceDetails (Service_ID, Service_Name) VALUES (2, 'Calibration');
+INSERT INTO ServiceDetails (Service_ID, Service_Name) VALUES (3, 'Replacement');
+INSERT INTO ServiceDetails (Service_ID, Service_Name) VALUES (4, 'Maintenance');
+INSERT INTO ServiceDetails (Service_ID, Service_Name) VALUES (5, 'Inspection');
+
+
+--insert Phone
+INSERT INTO Phone (Phone_ID, Phone_Number) VALUES (1, '416-555-1234');
+INSERT INTO Phone (Phone_ID, Phone_Number) VALUES (2, '416-555-5678');
+INSERT INTO Phone (Phone_ID, Phone_Number) VALUES (3, '416-555-9876');
+INSERT INTO Phone (Phone_ID, Phone_Number) VALUES (4, '416-555-3456');
+INSERT INTO Phone (Phone_ID, Phone_Number) VALUES (5, '416-555-7890');
+
+
+--insert RenterPhone
+INSERT INTO RenterPhone (RenterPhone_ID, Renter_ID, Phone_ID, Begin_Date, End_Date) 
+VALUES (1, 1, 1, TO_DATE('2024-01-01', 'YYYY-MM-DD'), TO_DATE('2024-12-31', 'YYYY-MM-DD'));
+INSERT INTO RenterPhone (RenterPhone_ID, Renter_ID, Phone_ID, Begin_Date, End_Date) 
+VALUES (2, 2, 2, TO_DATE('2024-01-01', 'YYYY-MM-DD'), TO_DATE('2024-12-31', 'YYYY-MM-DD'));
+INSERT INTO RenterPhone (RenterPhone_ID, Renter_ID, Phone_ID, Begin_Date, End_Date) 
+VALUES (3, 3, 3, TO_DATE('2024-01-01', 'YYYY-MM-DD'), TO_DATE('2024-12-31', 'YYYY-MM-DD'));
+INSERT INTO RenterPhone (RenterPhone_ID, Renter_ID, Phone_ID, Begin_Date, End_Date) 
+VALUES (4, 4, 4, TO_DATE('2024-01-01', 'YYYY-MM-DD'), TO_DATE('2024-12-31', 'YYYY-MM-DD'));
+INSERT INTO RenterPhone (RenterPhone_ID, Renter_ID, Phone_ID, Begin_Date, End_Date) 
+VALUES (5, 5, 5, TO_DATE('2024-01-01', 'YYYY-MM-DD'), TO_DATE('2024-12-31', 'YYYY-MM-DD'));
+
+
+--insert MaintenanceService
+INSERT INTO MaintenanceService (Maintenance_Service_ID, Maintenance_ID, Service_ID, Begin_Date, End_Date)
+VALUES (1, 1, 1, TO_DATE('2024-01-01', 'YYYY-MM-DD'), TO_DATE('2024-01-02', 'YYYY-MM-DD'));
+INSERT INTO MaintenanceService (Maintenance_Service_ID, Maintenance_ID, Service_ID, Begin_Date, End_Date)
+VALUES (2, 2, 2, TO_DATE('2024-02-01', 'YYYY-MM-DD'), TO_DATE('2024-02-02', 'YYYY-MM-DD'));
+INSERT INTO MaintenanceService (Maintenance_Service_ID, Maintenance_ID, Service_ID, Begin_Date, End_Date)
+VALUES (3, 3, 3, TO_DATE('2024-03-01', 'YYYY-MM-DD'), TO_DATE('2024-03-02', 'YYYY-MM-DD'));
+INSERT INTO MaintenanceService (Maintenance_Service_ID, Maintenance_ID, Service_ID, Begin_Date, End_Date)
+VALUES (4, 4, 4, TO_DATE('2024-04-01', 'YYYY-MM-DD'), TO_DATE('2024-04-02', 'YYYY-MM-DD'));
+INSERT INTO MaintenanceService (Maintenance_Service_ID, Maintenance_ID, Service_ID, Begin_Date, End_Date)
+VALUES (5, 5, 5, TO_DATE('2024-05-01', 'YYYY-MM-DD'), TO_DATE('2024-05-02', 'YYYY-MM-DD'));
+
+
+--insert ToolStatusHistory
+INSERT INTO ToolStatusHistory (ToolStatus_ID, Tool_ID, Status_ID, Begin_Date, End_Date)
+VALUES (1, 1, 1, TO_DATE('2024-01-01', 'YYYY-MM-DD'), TO_DATE('2024-01-31', 'YYYY-MM-DD'));
+INSERT INTO ToolStatusHistory (ToolStatus_ID, Tool_ID, Status_ID, Begin_Date, End_Date)
+VALUES (2, 2, 2, TO_DATE('2024-02-01', 'YYYY-MM-DD'), TO_DATE('2024-02-28', 'YYYY-MM-DD'));
+INSERT INTO ToolStatusHistory (ToolStatus_ID, Tool_ID, Status_ID, Begin_Date, End_Date)
+VALUES (3, 3, 3, TO_DATE('2024-03-01', 'YYYY-MM-DD'), TO_DATE('2024-03-31', 'YYYY-MM-DD'));
+INSERT INTO ToolStatusHistory (ToolStatus_ID, Tool_ID, Status_ID, Begin_Date, End_Date)
+VALUES (4, 4, 4, TO_DATE('2024-04-01', 'YYYY-MM-DD'), TO_DATE('2024-04-30', 'YYYY-MM-DD'));
+INSERT INTO ToolStatusHistory (ToolStatus_ID, Tool_ID, Status_ID, Begin_Date, End_Date)
+VALUES (5, 5, 5, TO_DATE('2024-05-01', 'YYYY-MM-DD'), TO_DATE('2024-05-31', 'YYYY-MM-DD'));
+
+
+-- Sequence for Renters table
+CREATE SEQUENCE Renters_SEQ
+START WITH 100      
+INCREMENT BY 1       
+NOCACHE              
+NOCYCLE             
+;
+
+
+--Sequence for Phone table
+CREATE SEQUENCE Phone_SEQ
+START WITH 100         
+INCREMENT BY 1       
+NOCACHE              
+NOCYCLE             
+;
+
+
+--Sequence for RenterPhone table
+CREATE SEQUENCE RenterPhone_SEQ
+START WITH 100         
+INCREMENT BY 1       
+NOCACHE              
+NOCYCLE              
+;
+
+
+--Create Renters_View
+CREATE VIEW Renters_View AS
+SELECT
+    r.Renter_ID,
+    r.First_Name,
+    r.Last_Name,
+    r.Email,
+    r.Street_Number,
+    r.Street,
+    r.City,
+    r.Province,
+    r.Apt,
+    r.Postal_Code,
+    r.Join_Date,
+    rp.RenterPhone_ID,
+    p.Phone_Number,
+    rp.Begin_Date,
+    rp.End_Date
+FROM
+    Renters r
+LEFT JOIN
+    RenterPhone rp ON r.Renter_ID = rp.Renter_ID
+LEFT JOIN
+    Phone p ON rp.Phone_ID = p.Phone_ID;
+
+
+--Create a trigger to handle INSERT operations on the Renters_View
+CREATE OR REPLACE TRIGGER Renters_View_Insert
+INSTEAD OF INSERT ON Renters_View
+FOR EACH ROW
+DECLARE
+    v_phone_id NUMBER;
+BEGIN
+    -- Insert into Renters table
+    INSERT INTO Renters (Renter_ID, First_Name, Last_Name, Email, Street_Number, Street, City, Province, Apt, Postal_Code, Join_Date)
+    VALUES (Renters_SEQ.NEXTVAL, :NEW.First_Name, :NEW.Last_Name, :NEW.Email, :NEW.Street_Number, :NEW.Street, :NEW.City, :NEW.Province, :NEW.Apt, :NEW.Postal_Code, SYSDATE);
+
+    -- Insert into Phone table
+    INSERT INTO Phone (Phone_ID, Phone_Number)
+    VALUES (Phone_SEQ.NEXTVAL, :NEW.Phone_Number);
+
+    -- Insert into RenterPhone table
+    INSERT INTO RenterPhone (RenterPhone_ID, Renter_ID, Phone_ID, Begin_Date, End_Date)
+    VALUES (RenterPhone_SEQ.NEXTVAL, Renters_SEQ.CURRVAL, Phone_SEQ.CURRVAL, SYSDATE, NULL);  -- startdate as SYSDATE, enddate as NULL
+END;
+
+-- Create a trigger to handle Update operations on the Renters_View
+CREATE OR REPLACE TRIGGER Renters_View_Update
+INSTEAD OF UPDATE ON Renters_View
+FOR EACH ROW
+BEGIN
+    -- 1. Update the Renters table
+    UPDATE Renters
+    SET
+        First_Name = :NEW.First_Name,
+        Last_Name = :NEW.Last_Name,
+        Email = :NEW.Email,
+        Street_Number = :NEW.Street_Number,
+        Street = :NEW.Street,
+        City = :NEW.City,
+        Province = :NEW.Province,
+        Apt = :NEW.Apt,
+        Postal_Code = :NEW.Postal_Code,
+        Join_Date = :NEW.Join_Date
+    WHERE Renter_ID = :OLD.Renter_ID;
+
+    -- 2. Update the old Phone record's End_Date to SYSDATE if it is still NULL
+    -- This ensures the previous active phone record is marked as inactive.
+    UPDATE RenterPhone
+    SET End_Date = SYSDATE
+    WHERE Renter_ID = :NEW.Renter_ID
+      AND End_Date IS NULL;  -- Only update the current active phone records
+     
+
+    -- 3. Insert the new Phone record with the current phone number
+    -- Insert into Phone table first to generate a new Phone_ID
+    INSERT INTO Phone (Phone_ID, Phone_Number)
+    VALUES (Phone_SEQ.NEXTVAL, :NEW.Phone_Number);
+
+    -- 4. Insert the corresponding RenterPhone record with the new phone information
+    INSERT INTO RenterPhone (RenterPhone_ID, Renter_ID, Phone_ID, Begin_Date, End_Date)
+    VALUES (RenterPhone_SEQ.NEXTVAL, :NEW.Renter_ID, Phone_SEQ.CURRVAL, SYSDATE, NULL);
+END;
+
+
+-- Add a new column 'Is_Deleted' to the Renters table to mark logical deletions
+ALTER TABLE Renters ADD Is_Deleted CHAR(1) DEFAULT 'N' CHECK (Is_Deleted IN ('Y', 'N'));
+
+-- Create a trigger to handle SOFT_DELETE operations on the Renters_View
+CREATE OR REPLACE TRIGGER Renters_View_Delete
+INSTEAD OF DELETE ON Renters_View
+FOR EACH ROW
+BEGIN
+    -- Step 1: Update the RenterPhone table, setting End_Date to SYSDATE
+    UPDATE RenterPhone
+    SET End_Date = SYSDATE
+    WHERE Renter_ID = :OLD.Renter_ID;
+
+    -- Step 2: Mark the Renters table record as deleted by setting Is_Deleted to 'Y'
+    UPDATE Renters
+    SET Is_Deleted = 'Y'
+    WHERE Renter_ID = :OLD.Renter_ID;
+
+    -- No need to delete the Renters record to avoid violating foreign key constraints
+END;
+
+
+--try to use this query to test INSERT trigger
+INSERT INTO Renters_View (First_Name, Last_Name, Email, Street_Number, Street, City, Province, Apt, Postal_Code, Phone_Number)
+VALUES ('Yanjun', 'Ma', 'yanjunma@example.com', 123, 'Main St', 'Townsville', 'State', 'Apt 101', '12345', '555-1234');
+
+--Create Tools_View
+CREATE OR REPLACE VIEW Tools_View AS
+SELECT 
+    t.Tool_ID,
+    t.Name,
+    t.Type_ID,
+    t.SubType_ID,
+    t.Condition,
+    t.Brand,
+    t.Model,
+    t.Daily_Rental_Price,
+    t.Deposit,
+    ts.Status,  
+    h.Status_ID, 
+    h.Begin_Date,
+    h.End_Date
+FROM 
+    Tools t
+LEFT JOIN 
+    ToolStatusHistory h ON t.Tool_ID = h.Tool_ID AND h.End_Date IS NULL  
+LEFT JOIN
+    ToolStatus ts ON h.Status_ID = ts.Status_ID;
+
+
+
+
+--CREATE SEQUENCE
+CREATE SEQUENCE ToolStatusHistory_Seq
+START WITH 100  
+INCREMENT BY 1 
+NOCACHE; 
+
+
+-- Create or replace a trigger to handle INSERT operations on the Tools_View
+CREATE OR REPLACE TRIGGER Tools_View_Insert
+INSTEAD OF INSERT ON Tools_View
+FOR EACH ROW
+DECLARE
+    new_tool_status_id NUMBER;  -- Variable to store the new ToolStatus_ID
+BEGIN
+    -- Insert new tool data into the Tools table
+    INSERT INTO Tools (Tool_ID, Name, Type_ID, SubType_ID, Condition, Brand, Model, Daily_Rental_Price, Deposit) 
+    VALUES (:NEW.Tool_ID, :NEW.Name, :NEW.Type_ID, :NEW.SubType_ID, :NEW.Condition, :NEW.Brand, :NEW.Model, :NEW.Daily_Rental_Price, :NEW.Deposit);
+
+    -- Get the new ToolStatusHistory ID using the sequence
+    SELECT ToolStatusHistory_SEQ.NEXTVAL INTO new_tool_status_id FROM dual;
+
+    -- Insert new status data for the tool into the ToolStatusHistory table
+    INSERT INTO ToolStatusHistory (ToolStatus_ID, Tool_ID, Status_ID, Begin_Date, End_Date) 
+    VALUES (new_tool_status_id, :NEW.Tool_ID, :NEW.Status_ID, SYSDATE, NULL);
+END;
+
+--try to use this query to test insert trigger
+INSERT INTO Tools_View 
+    (Tool_ID, Name, Type_ID, SubType_ID, Condition, Brand, Model, Daily_Rental_Price, Deposit, Status_ID)
+VALUES 
+    (11, 'Impact Driver', 1, 1, 'Excellent', 'BrandK', 'ModelK', 55.00, 220.00, 1);
+
+
+-- Create or replace a trigger to handle UPDATE operations on the Tools_View
+CREATE OR REPLACE TRIGGER Tools_View_Update
+INSTEAD OF UPDATE ON Tools_View
+FOR EACH ROW
+BEGIN
+    -- Update the End_Date of the ToolStatusHistory record to the current system date
+    -- This ensures the current tool status is marked as ended before inserting the new status
+    UPDATE ToolStatusHistory
+    SET End_Date = SYSDATE
+    WHERE Tool_ID = :NEW.Tool_ID
+      AND End_Date IS NULL;  -- Only update the active (ongoing) status records
+
+    -- Insert a new status record for the tool into the ToolStatusHistory table
+    INSERT INTO ToolStatusHistory (ToolStatus_ID, Tool_ID, Status_ID, Begin_Date, End_Date)
+    VALUES (ToolStatusHistory_SEQ.NEXTVAL, :NEW.Tool_ID, :NEW.Status_ID, SYSDATE, NULL);  -- Set Begin_Date to current date and End_Date as NULL
+
+    -- Update the Tools table with the new tool details
+    UPDATE Tools
+    SET Name = :NEW.Name,
+        Type_ID = :NEW.Type_ID,
+        SubType_ID = :NEW.SubType_ID,
+        Condition = :NEW.Condition,
+        Brand = :NEW.Brand,
+        Model = :NEW.Model,
+        Daily_Rental_Price = :NEW.Daily_Rental_Price,
+        Deposit = :NEW.Deposit
+    WHERE Tool_ID = :NEW.Tool_ID;  -- Ensure the correct tool record is updated
+END;
+
+--try to use this query to test update trigger
+UPDATE Tools_View
+SET Status_ID = 2
+WHERE Tool_ID = 11;
+
+
+--Add a new column 'Is_Deleted' to the Tools table to mark logical deletions
+ALTER TABLE Tools ADD Is_Deleted CHAR(1) DEFAULT 'N';
+
+--Create a trigger to handle SOFT_DELETE operations on the Tools_View
+CREATE OR REPLACE TRIGGER Tools_View_Delete
+INSTEAD OF DELETE ON Tools_View
+FOR EACH ROW
+BEGIN
+    -- Step 1: Update ToolStatusHistory table, setting End_Date to SYSDATE for current tool status
+    UPDATE ToolStatusHistory
+    SET End_Date = SYSDATE
+    WHERE Tool_ID = :OLD.Tool_ID AND End_Date IS NULL;
+
+    -- Step 2: Mark the Tools table record as deleted by setting Is_Deleted to 'Y'
+    UPDATE Tools
+    SET Is_Deleted = 'Y'
+    WHERE Tool_ID = :OLD.Tool_ID;
+
+    -- No need to delete the Tool record to avoid violating foreign key constraints
+END;
+
+
+--try to use this query to test delete trigger
+DELETE FROM Tools_View WHERE Tool_ID = 11;
+
+ --Create RentersRentalRecords_View
+CREATE OR REPLACE VIEW RentersRentalRecords_View AS
+SELECT 
+    r.Renter_ID,
+    r.First_Name,
+    r.Last_Name,
+    r.Email,
+    rt.Transaction_ID,
+    rt.Transaction_Date,
+    rt.Total_Fee,
+    rt.Staff_ID,
+    ri.Tool_ID,
+    t.Name AS Tool_Name,
+    ri.Quantity,
+    ri.Start_Date,
+    ri.End_Date
+FROM 
+    Renters r
+LEFT JOIN 
+    RentalTransactions rt
+    ON r.Renter_ID = rt.Renter_ID
+LEFT JOIN 
+    RentalItem ri
+    ON rt.Transaction_ID = ri.Transaction_ID
+LEFT JOIN 
+    Tools t
+    ON ri.Tool_ID = t.Tool_ID;
+
+
+--CREATE SEQUENCE Transaction_ID_Seq
+CREATE SEQUENCE Transaction_ID_Seq
+START WITH 100
+INCREMENT BY 1
+NOCACHE;
+
+
+--Create a trigger to handle INSERT operations
+CREATE OR REPLACE TRIGGER RentersRentalRecords_Insert
+INSTEAD OF INSERT ON RentersRentalRecords_View
+FOR EACH ROW
+DECLARE
+    v_tool_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_tool_count
+    FROM Tools t
+    LEFT JOIN ToolStatusHistory h 
+        ON t.Tool_ID = h.Tool_ID 
+        AND h.End_Date IS NULL
+    WHERE t.Tool_ID = :NEW.Tool_ID 
+    AND (h.Status_ID != 4 OR h.Status_ID IS NULL);
+    
+    IF v_tool_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'tool has been rent');
+    END IF;
+
+-- Insert a new record into the RentalTransactions table
+    INSERT INTO RentalTransactions 
+        (Transaction_ID, Renter_ID, Transaction_Date, Total_Fee, Staff_ID)
+    VALUES 
+        (Transaction_ID_Seq.NEXTVAL, :NEW.Renter_ID, SYSDATE, 0, :NEW.Staff_ID);
+
+    -- Insert a new record into the RentalItem table
+    INSERT INTO RentalItem 
+        (Transaction_ID, Tool_ID, Quantity, Start_Date, End_Date)
+    VALUES 
+        (Transaction_ID_Seq.CURRVAL, :NEW.Tool_ID, :NEW.Quantity, SYSDATE, NULL);
+
+    -- Insert a new record into the ToolStatusHistory table
+    INSERT INTO ToolStatusHistory 
+        (ToolStatus_ID, Tool_ID, Status_ID, Begin_Date, End_Date)
+    VALUES 
+        (ToolStatusHistory_Seq.NEXTVAL, :NEW.Tool_ID, 4, SYSDATE, NULL);
+END;
+
+--query to test insert trigger on the RentersRentalRecords_View
+INSERT INTO RentersRentalRecords_View 
+    (Renter_ID, Staff_ID, Tool_ID, Quantity)
+VALUES 
+    (1, 1, 1, 2);
+
+
+
+--Create a trigger to handle UPDATE operations on the RentersRentalRecords_View
+CREATE OR REPLACE TRIGGER RentersRentalRecords_Update
+INSTEAD OF UPDATE ON RentersRentalRecords_View
+FOR EACH ROW
+BEGIN
+    -- Step 1: Update the RentalItem table by setting End_Date to the current date (SYSDATE)
+    -- This marks the item as returned (end of rental period)
+    UPDATE RentalItem
+    SET End_Date = SYSDATE
+    WHERE Transaction_ID = :OLD.Transaction_ID
+      AND Tool_ID = :OLD.Tool_ID
+      AND End_Date IS NULL;
+
+    -- Step 2: 更新工具状态历史
+    UPDATE ToolStatusHistory
+    SET End_Date = SYSDATE
+    WHERE Tool_ID = :NEW.Tool_ID
+      AND End_Date IS NULL
+      AND Status_ID = 4;
+
+-- Step 2: Update the ToolStatusHistory table by setting End_Date to the current date (SYSDATE)
+    -- This updates the tool's status history, marking the tool as returned (status change from "Rented" to "Returned")
+    INSERT INTO ToolStatusHistory 
+        (ToolStatus_ID, Tool_ID, Status_ID, Begin_Date, End_Date)
+    VALUES 
+        (ToolStatusHistory_Seq.NEXTVAL, :NEW.Tool_ID, 1, SYSDATE, NULL);
+
+    -- Step 3: Recalculate and update the Total_Fee in the RentalTransactions table
+    -- We calculate the total rental fee based on the quantity and daily rental price for each tool in the transaction
+    DECLARE
+        v_new_fee DECIMAL(10, 2);
+    BEGIN
+        SELECT SUM(ri.Quantity * t.Daily_Rental_Price * 
+                  (CEIL((NVL(ri.End_Date, SYSDATE) - ri.Start_Date))))
+        INTO v_new_fee
+        FROM RentalItem ri
+        JOIN Tools t ON ri.Tool_ID = t.Tool_ID
+        WHERE ri.Transaction_ID = :NEW.Transaction_ID
+        GROUP BY ri.Transaction_ID;
+
+        UPDATE RentalTransactions
+        SET Total_Fee = v_new_fee
+        WHERE Transaction_ID = :NEW.Transaction_ID;
+    END;
+
+   -- Step 4: Update the RentalItem table by setting Start_Date to the current date (SYSDATE)
+    -- This records the actual start date for the rental transaction
+    UPDATE RentalItem
+    SET Start_Date = SYSDATE
+    WHERE Transaction_ID = :NEW.Transaction_ID
+      AND Tool_ID = :NEW.Tool_ID
+      AND Start_Date IS NULL;
+END;
+
+--query to test update trigger on the RentersRentalRecords_View
+UPDATE RentersRentalRecords_View
+SET Quantity = 1, End_Date = SYSDATE
+WHERE Transaction_ID = 101 AND Tool_ID = 1;
